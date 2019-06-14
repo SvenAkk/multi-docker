@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t svenakk/react-test -f ./client/Dockerfile.dev ./client/Dockerfile.dev
+
+script:
+  - docker run svenakk/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t svenakk/multi-client ./client
+  - docker build -t svenakk/multi-nginx ./nginx
+  - docker build -t svenakk/multi-server ./server
+  - docker build -t svenakk/multi-worker ./worker
+  # push dockerhub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push svenakk/multi-client
+  - docker push svenakk/multi-nginx
+  - docker push svenakk/multi-server
+  - docker push svenakk/multi-worker
